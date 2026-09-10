@@ -1,0 +1,15 @@
+# Generated outputs
+output/
+tmp/
+
+# Local editor/OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python auxiliary caches
+__pycache__/
+*.pyc
+
+# Office temporary files
+~$*
