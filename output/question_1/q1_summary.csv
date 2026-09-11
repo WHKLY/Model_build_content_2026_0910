@@ -9,6 +9,9 @@ plan_A_curtail_kwh,1.3575708458625338e-11
 plan_A_target_index,140
 plan_A_target_grid_kwh,569.3586333331795
 plan_A_max_balance_residual,1.1368683772161603e-13
+plan_A_max_soc_recurrence_residual,0.0
+plan_A_max_lp_ub_violation,3.183231456205249e-12
+plan_A_max_lp_eq_residual,0.0
 plan_B_cost_yuan,35126.94858928965
 plan_B_grid_kwh,59482.698998353924
 plan_B_charge_kwh,20740.66613168725
@@ -17,6 +20,9 @@ plan_B_curtail_kwh,1.7434745005731302e-11
 plan_B_target_index,140
 plan_B_target_grid_kwh,902.6919667008649
 plan_B_max_balance_residual,1.1368683772161603e-13
+plan_B_max_soc_recurrence_residual,0.0
+plan_B_max_lp_ub_violation,2.1600499167107046e-12
+plan_B_max_lp_eq_residual,0.0
 cost_saving_A_vs_no_storage_yuan,12925.09800155701
 cost_saving_B_vs_no_storage_yuan,12925.09800155701
 max_abs_grid_difference_B_minus_A_kwh,333.33333336768544

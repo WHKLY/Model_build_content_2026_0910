@@ -22,7 +22,7 @@ def run_question_1(*, output_dir: Path | None = None, target_index: int = 140, m
     plan_a = solve_at_same_cost(interval_data, lp, primary_solution.cost, target_index=target_index, sense="min")
     plan_b = solve_at_same_cost(interval_data, lp, primary_solution.cost, target_index=target_index, sense="max")
     baseline = no_storage_baseline(interval_data)
-    checks = verify_pair(interval_data, plan_a, plan_b)
+    checks = verify_pair(interval_data, plan_a, plan_b, lp)
 
     exported = export_all(outdir, source, interval_data, baseline, plan_a, plan_b, checks)
     figures = plot_all(source, interval_data, baseline, plan_a, plan_b, outdir / "figures") if make_plots else {}
@@ -36,6 +36,7 @@ def run_question_1(*, output_dir: Path | None = None, target_index: int = 140, m
     print(f"Schedule CSV: {exported['schedule_csv']}")
     print(f"Summary CSV: {exported['summary_csv']}")
     print(f"Workbook path: {exported['workbook']}")
+    print(f"Template result1 path: {exported['template_result1']}")
 
     return {
         "baseline": baseline,

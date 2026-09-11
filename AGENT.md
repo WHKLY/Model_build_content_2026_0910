@@ -1,5 +1,6 @@
 # Agent Workflow Guide
 
+Before changing code, outputs, or paper text, read `UNIFIED_PLAN.md` first. It is the current source of truth for the Python workflow, Question 1 submission package, verification scope, and paper claims.
 This file is written for teammates and local AI assistants after pulling this repository. Treat every change as part of a shared mathematical-modeling workflow.
 
 ## First Things To Read

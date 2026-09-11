@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from q1_data import INTERVAL_COUNT, Q1SourceData
-from q1_model import BaselineSolution, IntervalData, ScheduleSolution
+from q1_model import BaselineSolution, IntervalData, SOC_INITIAL_KWH, SOC_MAX_KWH, SOC_MIN_KWH, SOC_TERMINAL_KWH, ScheduleSolution
 
 COLOR_BLUE = "#2563EB"
 COLOR_GREEN = "#059669"
@@ -18,6 +18,7 @@ COLOR_RED = "#DC2626"
 COLOR_AMBER = "#D97706"
 COLOR_PURPLE = "#7C3AED"
 COLOR_GRAY = "#4B5563"
+COLOR_DARK = "#111827"
 
 
 def _save(fig: plt.Figure, basepath: Path) -> dict[str, Path]:
@@ -28,6 +29,46 @@ def _save(fig: plt.Figure, basepath: Path) -> dict[str, Path]:
     fig.savefig(svg, bbox_inches="tight")
     plt.close(fig)
     return {"png": png, "svg": svg}
+
+
+def plot_purchase_soc(plan_a: ScheduleSolution, figdir: Path) -> dict[str, Path]:
+    interval_x = np.arange(1, INTERVAL_COUNT + 1)
+    soc_x = np.arange(0, INTERVAL_COUNT + 1)
+    soc_y = np.concatenate(([SOC_INITIAL_KWH], plan_a.soc_kwh))
+
+    fig, axes = plt.subplots(2, 1, figsize=(12, 7.5), sharex=False, gridspec_kw={"height_ratios": [1.0, 1.15]})
+    axes[0].bar(interval_x, plan_a.grid_kwh, color=COLOR_BLUE, width=0.85)
+    axes[0].set_ylabel("Grid purchase / kWh")
+    axes[0].set_title("Question 1 Plan A Grid Purchase")
+    axes[0].grid(True, axis="y", alpha=0.3)
+
+    axes[1].plot(soc_x, soc_y, color=COLOR_PURPLE, linewidth=1.8, label="SOC")
+    axes[1].axhline(SOC_MIN_KWH, color=COLOR_RED, linestyle="--", linewidth=1.0, label="SOC lower bound")
+    axes[1].axhline(SOC_MAX_KWH, color=COLOR_GREEN, linestyle="--", linewidth=1.0, label="SOC upper bound")
+    axes[1].scatter([0, INTERVAL_COUNT], [SOC_INITIAL_KWH, SOC_TERMINAL_KWH], color=COLOR_DARK, s=28, zorder=3, label="Initial/terminal SOC")
+    axes[1].set_xlabel("10-minute interval index")
+    axes[1].set_ylabel("SOC / kWh")
+    axes[1].set_title("Question 1 Plan A State of Charge")
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend(loc="upper right", ncol=2)
+
+    fig.tight_layout()
+    return _save(fig, figdir / "q1_purchase_soc")
+
+
+def plot_charge_discharge(plan_a: ScheduleSolution, figdir: Path) -> dict[str, Path]:
+    x = np.arange(1, INTERVAL_COUNT + 1)
+    fig, ax = plt.subplots(figsize=(12, 4.8))
+    ax.bar(x, plan_a.charge_kwh, color=COLOR_GREEN, width=0.85, label="Charge")
+    ax.bar(x, -plan_a.discharge_kwh, color=COLOR_RED, width=0.85, label="Discharge")
+    ax.axhline(0.0, color=COLOR_DARK, linewidth=0.8)
+    ax.set_xlabel("10-minute interval index")
+    ax.set_ylabel("Energy / kWh")
+    ax.set_title("Question 1 Plan A Charge and Discharge")
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend(loc="upper right")
+    fig.tight_layout()
+    return _save(fig, figdir / "q1_charge_discharge")
 
 
 def plot_dispatch(source: Q1SourceData, interval_data: IntervalData, plan_a: ScheduleSolution, plan_b: ScheduleSolution, figdir: Path) -> dict[str, Path]:
@@ -91,6 +132,8 @@ def plot_costs(baseline: BaselineSolution, plan_a: ScheduleSolution, plan_b: Sch
 
 def plot_all(source: Q1SourceData, interval_data: IntervalData, baseline: BaselineSolution, plan_a: ScheduleSolution, plan_b: ScheduleSolution, figdir: Path) -> dict[str, dict[str, Path]]:
     return {
+        "purchase_soc": plot_purchase_soc(plan_a, figdir),
+        "charge_discharge": plot_charge_discharge(plan_a, figdir),
         "dispatch": plot_dispatch(source, interval_data, plan_a, plan_b, figdir),
         "difference": plot_plan_difference(plan_a, plan_b, figdir),
         "costs": plot_costs(baseline, plan_a, plan_b, figdir),
