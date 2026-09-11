@@ -1,5 +1,18 @@
 # Run Guide
 
+## Contest One-Touch Package
+
+The self-contained Question 1 contest package is under `one_touch_start/`. In the contest environment, run:
+
+```text
+cd one_touch_start
+python main.py
+```
+
+It reads only `one_touch_start/assets/`, writes non-image files to `one_touch_start/output/`, and performs no environment setup.
+
+The entry runs all implemented questions by default. Use `python main.py --list-questions` to inspect the registry or `python main.py --question 1` to run one implemented question. Questions without reviewed executable runners are not registered and do not produce placeholder files.
+
 ## Question 1
 
 Primary entry point:

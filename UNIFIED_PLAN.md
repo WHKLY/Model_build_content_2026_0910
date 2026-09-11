@@ -168,6 +168,14 @@ Execute future work in this order:
 
 Do not start Questions 2-4 implementation until Question 1's submission package is internally consistent.
 
-## 9. AI Collaboration Rule
+## 9. Contest One-Touch Package
+
+`one_touch_start/` is the self-contained contest-facing package. Its supported invocation is `python main.py` from that directory. It must read data only from its local `assets/` directory, write only non-image results to its local `output/` directory, and must not create or configure a Python environment.
+
+The entry runs every question registered in `one_touch_start/scripts/question_registry.py`; `--question N` selects one implemented question and `--list-questions` lists the registry. Do not register Questions 2-4 or generate placeholder files until their reviewed solver, exporter, and verification code exists.
+
+The one-touch code is intentionally copied into the package instead of importing repository-level modules. Keep each reviewed model, verification, certificate, and template-export behavior synchronized when either implementation changes.
+
+## 10. AI Collaboration Rule
 
 For future AI work, start by reading this file. Do not re-litigate the MWorks-to-Python decision, the Plan A submission choice, or the need for template export/read-back verification unless the team explicitly changes the strategy.
