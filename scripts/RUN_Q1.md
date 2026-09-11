@@ -1,47 +1,48 @@
 # Run Question 1
 
-## Recommended Way
+## Environment
 
-Use MWORKS.Syslab 2024a or 2026a.
+Create and activate the project virtual environment, then install the pinned requirements:
 
-1. Open Syslab.
-2. Set the working directory to the project root:
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-   `G:\a for HIT\project\Model_build_content_2026_0910`
+The Termux environment used for this refactor is recorded in `env/LRX_Termux_python_venv.md`. For contest verification, record the actual judge or teammate environment after installing dependencies with:
 
-3. Open and run:
+```bash
+python --version
+python -m pip --version
+python -m pip freeze
+```
 
-   `scripts/q1_main.jl`
+## Run
 
-The script imports hard-coded data from `scripts/q1_data.jl`, so it does not need to read Excel during solving.
+From the project root:
 
-## Expected Output
+```bash
+. .venv/bin/activate
+python scripts/q1_main.py
+```
 
-The script writes files under:
+Expected outputs are written under `output/question_1/`.
 
-`output/question_1/`
-
-Expected table outputs:
+Expected tables:
 
 - `q1_schedule.csv`
 - `q1_summary.csv`
 - `q1_four_hour_summary.csv`
 - `q1_target_purchase.csv`
-- `q1_results.xlsx` if Excel COM export succeeds
+- `q1_results.xlsx`
 
-Expected visualization outputs:
+Expected figures:
 
 - `figures/q1_dispatch_overview.png`
-- `figures/q1_dispatch_overview.syslabfig`
+- `figures/q1_dispatch_overview.svg`
 - `figures/q1_plan_difference.png`
-- `figures/q1_plan_difference.syslabfig`
+- `figures/q1_plan_difference.svg`
 - `figures/q1_cost_comparison.png`
-- `figures/q1_cost_comparison.syslabfig`
-
-## If Excel Export Fails
-
-The CSV outputs are the primary fallback. Excel export uses Windows COM through `PyCall` and requires Microsoft Excel to be installed and available to the Syslab Python bridge.
-
-## If PNG Export Fails
-
-Open the generated `.syslabfig` files in Syslab and export manually. The plotting code still creates the figures with the same visual style.
+- `figures/q1_cost_comparison.svg`

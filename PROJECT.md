@@ -4,24 +4,24 @@ This repository is for the 2026 mathematical modeling C problem on microgrid ext
 
 ## Collaboration Rules
 
-- Treat this as a group project. Every teammate may have a different local MWorks/Syslab environment.
+- Treat this as a group project. Every teammate may have a different local Python, package, Excel, and operating-system environment.
 - Record local environment details under `env/` before running or modifying executable code.
-- Do not assume another teammate has the same MWorks version, `PATH`, Excel/COM availability, Python environment, or shell behavior.
+- Do not assume another teammate has the same Python version, `PATH`, Excel reader backend, shell behavior, or package cache.
 - Do not push to any remote repository unless the group explicitly agrees.
 
 ## Language and Runtime
 
-- Primary implementation language: MWorks/Syslab script files.
-- Use `.jl` files for now because the local Syslab examples use `.jl`.
-- Do not write MATLAB-style code by habit. MWorks/Syslab syntax and APIs must be checked against local examples or documentation before relying on them.
-- Keep MATLAB-specific assumptions out of the model implementation unless they have been verified in MWorks.
+- Primary implementation language: Python.
+- Use the repository virtual environment `.venv/` for local runs.
+- Pin runtime dependencies in `requirements.txt` and record the actual environment under `env/`.
+- Do not depend on MWorks/Syslab for the formal implementation. Earlier MWorks notes are retained only as project history.
+- Keep code portable and explicit. Avoid hidden notebook state, local absolute paths, or unrecorded package assumptions.
 
 ## Source Data Policy
 
 - Original competition files should be treated as immutable.
 - Store the canonical source data under `original_source/`.
-- Keep data-file paths in one dedicated MWorks script, not scattered through model code.
-- Prefer explicit hard-coded source filenames in that path script. This makes the data dependency easy to inspect and easy for teammates to adjust.
+- Keep data-file paths in one dedicated Python script, not scattered through model code.
 - Generated outputs should be written outside `original_source/`.
 
 Current source-data plan:
@@ -35,7 +35,7 @@ Current source-data plan:
 | Attachment 4 | `original_source/附件/附件4.xlsx` |
 | Result templates | `original_source/附件/附件5/` |
 
-The existing `raw/` directory has not been moved automatically. Move or copy source files only after the group confirms the canonical layout.
+The competition source files have been copied into `original_source/`. The `raw/` directory is kept as an early setup copy.
 
 ## Build Notes Requirement
 
@@ -87,12 +87,15 @@ Important result interpretation:
 
 Keep scripts small and explainable:
 
-- `scripts/project_paths.jl`: hard-coded project and source-data paths.
-- `scripts/q1_main.jl`: question 1 orchestration entry point.
-- `scripts/q1_model.jl`: model parameter conversion and LP construction.
-- `scripts/q1_verify.jl`: physical and numerical checks.
+- `scripts/project_paths.py`: hard-coded project and source-data paths.
+- `scripts/q1_data.py`: source-data loading and interval labels.
+- `scripts/q1_main.py`: question 1 orchestration entry point.
+- `scripts/q1_model.py`: model parameter conversion, LP construction, and solve wrappers.
+- `scripts/q1_verify.py`: physical and numerical checks.
+- `scripts/q1_export.py`: table and workbook output.
+- `scripts/q1_plot.py`: visualizations.
 
-Future scripts should follow the same pattern: path/config, model, run, verify, output.
+Future scripts should follow the same pattern: path/config, data, model, run, verify, output, plot.
 
 ## Git Policy
 

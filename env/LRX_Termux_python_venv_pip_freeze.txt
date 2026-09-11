@@ -1,0 +1,17 @@
+contourpy @ file:///home/builder/.termux-build/python-contourpy/src/dist/contourpy-1.3.3-cp314-cp314-android_aarch64.whl#sha256=f11e072c913ecfd663fcd93e5c8237f5e0aad8fcc85abaa62095906c79f436c5
+cycler==0.12.1
+et_xmlfile==2.0.0
+fonttools==4.65.0
+kiwisolver==1.5.1
+matplotlib @ file:///home/builder/.termux-build/matplotlib/src/dist/matplotlib-3.11.2-cp314-cp314-android_aarch64.whl#sha256=6c602afce3f7c3bdae8d171bc30758bde4fdc83e2f99a7eb1ce9258cfaa898c1
+numpy @ file:///home/builder/.termux-build/python-numpy/src/dist/numpy-2.4.4-cp314-cp314-android_aarch64.whl#sha256=68ef31f0d8925d96da2b5e014c2c3d32a16dd68887329eeecb7f3a548222e24d
+openpyxl==3.1.5
+packaging==26.3
+pandas @ file:///home/builder/.termux-build/python-pandas/src/dist/pandas-3.0.5-cp314-cp314-android_aarch64.whl#sha256=2a35f0521e37d4736d43c1be8e440673d00f1d929bf5bc07090d0d6519e987bd
+pillow @ file:///home/builder/.termux-build/python-pillow/src
+proot-distro @ file:///home/builder/.termux-build/proot-distro/src
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+scipy @ file:///home/builder/.termux-build/python-scipy/src/dist/scipy-1.18.1-cp314-cp314-android_aarch64.whl#sha256=26fa3c9be785483a304e9673dc82496f38bc950b92a3d1b6974b51abec20729f
+six==1.17.0
+xlsxwriter==3.2.9

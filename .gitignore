@@ -1,6 +1,7 @@
 # Generated outputs
 output/
 tmp/
+.venv/
 
 # Local editor/OS metadata
 .DS_Store
