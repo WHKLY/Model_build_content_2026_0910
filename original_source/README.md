@@ -20,4 +20,4 @@ original_source/
       result4-3.xlsx
 ```
 
-The existing files have not been moved from `raw/` yet. Move or copy them only after the team confirms this canonical layout.
+The competition source files have been copied into this canonical directory. The `raw/` directory is still kept as the early setup copy, so final scripts should use `original_source/` unless the team explicitly changes the data policy.

@@ -119,11 +119,11 @@ Current expected source files:
 - `original_source/附件/附件2.xlsx`
 - `original_source/附件/附件3.xlsx`
 - `original_source/附件/附件4.xlsx`
-- `original_source/附件/附件5/result1_1.xlsx`
-- `original_source/附件/附件5/result1_2.xlsx`
+- `original_source/附件/附件5/result1.xlsx`
 - `original_source/附件/附件5/result2.xlsx`
 - `original_source/附件/附件5/result3.xlsx`
-- `original_source/附件/附件5/result4.xlsx`
+- `original_source/附件/附件5/result4-2.xlsx`
+- `original_source/附件/附件5/result4-3.xlsx`
 
 Do not edit source Excel files in place. If an exported workbook is needed, write it under `output/`.
 
