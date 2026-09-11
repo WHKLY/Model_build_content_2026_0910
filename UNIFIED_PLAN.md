@@ -2,10 +2,7 @@
 
 Date: 2026-09-11
 
-This document is the project-level source of truth after reviewing:
-
-- `/data/data/com.termux/files/home/storage/downloads/QQ/参赛论文0911-2.pdf`
-- `/data/data/com.termux/files/home/storage/downloads/QQ/41016777d4c40050b84e92b2132cb7ea_3247872800853498438_m.md`
+This document is the project-level source of truth after reviewing the received Question 1 paper and implementation materials under `recieve/problem_1/`.
 
 Follow this plan before changing code, outputs, or paper text. If a future request conflicts with this document, state the conflict first and update this document only after the team explicitly chooses a new rule.
 
@@ -22,23 +19,23 @@ Question 1 already has a working Python implementation that reproduces the main 
 - Plan A charge/discharge totals: 20740.67 kWh and 16799.94 kWh;
 - initial and terminal SOC: 6000.00 kWh.
 
-The current Python result is usable as a computational baseline, but it is not yet a complete contest submission package. The review Markdown identifies missing submission-grade pieces that must be fixed before final delivery.
+The current Python result is a complete Question 1 computational submission package: it includes the corrected template copy, audit workbook, exact rational certificate, independent verifier, CSV tables, and PNG/SVG figures. Future changes must preserve this evidence chain.
 
 ## 2. Runtime And Dependency Policy
 
 Use Python as the only formal runtime. Do not return to MWorks/Syslab.
 
-The repository must support a clean, judge-friendly Python environment. Termux is allowed for development, but Termux system packages are not enough as the final reproducibility story.
+The repository must support a clean, judge-friendly Windows x64 Python environment. Linux and Termux are outside the formal reproducibility target.
 
-Required environment work:
+Verified environment workflow:
 
-1. Choose and document the target verification environment. Preferred target is Windows x64 CPython 3.12, because the review already tested that family of environment.
+1. Use and document Windows x64 CPython 3.11 for the current formal build.
 2. Create a clean venv in that target environment.
 3. Install dependencies from `requirements.txt` without relying on preinstalled scientific packages.
-4. Run `python scripts/q1_main.py` from the clean venv.
+4. Run `.venv\Scripts\python.exe scripts\q1_main.py` from the clean venv.
 5. Record `python --version`, `python -m pip --version`, and `python -m pip freeze` under `env/`.
 
-Do not pin package versions that have not been clean-install tested on the target environment. The review found `matplotlib==3.11.2` unsuitable for Windows CPython 3.12 through the tested index. Fix requirements against a real clean install before claiming reproducibility.
+Do not pin package versions that have not been clean-install tested on the target environment.
 
 ## 3. Question 1 Model Policy
 
@@ -56,9 +53,7 @@ Keep these assumptions fixed unless the paper and code are updated together:
 - charge/discharge power limit 5000 kW on the AC side;
 - no sale-to-grid revenue;
 - surplus PV may be curtailed;
-- discharge cannot exceed same-interval load in the current formulation.
-
-The discharge-not-exceed-load constraint must be mentioned in the paper, because it is stricter than a pure power-limit statement. It is acceptable if described as the no-sale/no-dump interpretation of the physical model.
+- unused supply may be discarded without revenue, as represented by the paper's supply inequality.
 
 ## 4. Output Policy
 
@@ -71,6 +66,7 @@ Audit outputs:
 - `q1_four_hour_summary.csv`
 - `q1_target_purchase.csv`
 - `q1_results.xlsx`
+- `certificate_q1.json`
 - PNG/SVG figures
 
 Contest template outputs:
@@ -85,7 +81,7 @@ Template export rules:
 2. Preserve the original template structure unless the team deliberately creates a clearly named corrected-copy template.
 3. Explicitly fill 0:00 SOC as 6000 kWh and 24:00 SOC as 6000 kWh.
 4. Do not use the first schedule-row SOC of 6750 kWh as the 0:00 SOC.
-5. Handle the template time-label offset deliberately. The code uses physical intervals `00:00-00:10` through `23:50-24:00`; the original template labels may start at `0:10-0:20`. The export must document the chosen mapping and apply it consistently to purchase, charge/discharge, and SOC.
+5. Correct the generated template-copy labels to physical intervals `00:00-00:10` through `23:50-24:00`; never modify the immutable source template.
 6. After writing the workbook, read it back and verify that template values match the selected Plan A schedule and four-hour totals.
 
 ## 5. Verification Policy
@@ -111,26 +107,27 @@ Required independent checks:
 - reported cost equals recomputed cost from grid purchase and price;
 - CSV and XLSX outputs can be read back and match in-memory results;
 - `result1.xlsx` can be read back and matches the submitted Plan A schedule.
+- `certificate_q1.json` passes exact rational verification against Attachment 1 without calling an optimizer.
 
 Do not treat `curtail_kwh` computed from the balance equation as an independent proof of balance. Balance checks must recompute from independent schedule columns or original LP constraints.
 
-Do not treat Plan A and Plan B equal floating-point costs as an optimality certificate. They demonstrate non-uniqueness only after the primary LP optimum has already been accepted numerically.
+Do not treat Plan A and Plan B equal floating-point costs as an optimality certificate. They demonstrate non-uniqueness only after `certificate_q1.json` proves the primary optimum.
 
 ## 6. Paper-Writing Policy
 
 The PDF currently uses the right core numbers and the right high-level Python/HiGHS story, but paper claims must stay within what the program actually proves.
 
-Allowed wording:
+Allowed wording after the exact certificate passes:
 
 - The model is a linear program solved numerically with SciPy/HiGHS.
-- The returned solution passed feasibility and consistency checks within stated tolerances.
+- The returned solution passed numerical checks and an independently recomputed exact rational certificate.
+- The exact rational primal cost equals the exact dual lower bound, proving global optimality for the stated LP.
 - Plan A and Plan B show that interval-level schedules need not be unique under the same optimal cost, within numerical tolerance.
 - Tables are computed from unrounded data and displayed rounded to two decimals.
 
-Forbidden unless new code is added:
+Forbidden:
 
-- claiming rational exact verification;
-- claiming a strict primal-dual zero-gap certificate;
+- claiming exact optimality if `certificate_q1.json` is absent, fails source-hash validation, or has a nonzero rational gap;
 - claiming the program exports and validates the official template if it only exports `q1_results.xlsx`;
 - claiming independent workbook verification unless the workbook is read back and checked;
 - claiming `q1_plot.py` is an independent plotting entry unless such an entry is added.

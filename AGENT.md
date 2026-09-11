@@ -18,7 +18,7 @@ If this file conflicts with a more specific problem note, state the conflict cle
 
 ## Repository Purpose
 
-This repository is for the 2026 mathematical modeling C problem on microgrid external power purchase strategy.
+This repository is for the 2026 mathematical modeling C problem on microgrid external power purchase strategy. The formal reproducibility target is Windows x64 with PowerShell.
 
 The formal implementation now uses Python inside a recorded virtual environment. Earlier MWorks/Syslab scripts were removed because that environment was too restrictive for contest verification.
 
@@ -33,11 +33,11 @@ Primary goals:
 
 ## Environment Rules
 
-Every teammate may have a different local environment. Before running or changing executable scripts, record the local environment under `env/`.
+Every teammate may have a different local environment. Before running or changing executable scripts, record the Windows environment under `env/`.
 
 Important environment details include:
 
-- operating system and shell;
+- Windows version and PowerShell version;
 - Python version and virtual-environment path;
 - pip version;
 - installed package versions from `python -m pip freeze`;
@@ -45,7 +45,7 @@ Important environment details include:
 - plotting backend and font behavior;
 - locale and encoding behavior for Chinese filenames.
 
-Use a Python virtual environment for formal runs. Do not add unrecorded global package assumptions.
+Use a repository-local `.venv` for formal runs. Invoke `.venv\Scripts\python.exe` explicitly so an active Conda environment or another global Python cannot silently change the run. Linux and Termux environments are outside the formal submission workflow.
 
 ## Runtime Rules
 
@@ -64,7 +64,7 @@ Use the existing layout consistently:
 - `recieve/`: received problem statements, teammate notes, and intermediate documents.
 - `note/`: required modeling and implementation notes.
 - `scripts/`: Python implementation scripts.
-- `env/`: local environment records.
+- `env/`: Windows environment records used for formal verification.
 - `output/`: generated outputs, normally ignored by Git.
 
 Do not edit source Excel files in place. If an exported workbook is needed, write it under `output/`.
@@ -82,6 +82,8 @@ Preferred pattern for each question:
 - `scripts/qN_data.py` for source data loading or generated constants.
 - `scripts/qN_model.py` for mathematical model construction and solver calls.
 - `scripts/qN_verify.py` for numerical and physical checks.
+- `scripts/qN_certificate.py` for certificate generation when an exact proof is claimed.
+- `scripts/qN_certificate_verify.py` for independent certificate verification without an optimizer.
 - `scripts/qN_export.py` for CSV/XLSX/table output.
 - `scripts/qN_plot.py` for visualizations.
 - `scripts/qN_main.py` for orchestration.
@@ -114,6 +116,7 @@ Current important assumptions:
 - no sale-to-grid revenue unless explicitly modeled later;
 - surplus photovoltaic energy may be curtailed;
 - the 5000 kW limit is not a grid-purchase power limit.
+- unused supply may be discarded without revenue, matching the inequality model in the paper.
 
 Before changing Question 1 code, read:
 
@@ -132,20 +135,18 @@ Every solver call should be followed by checks for solver status, balance residu
 
 ## Commands For Teammates
 
-Create the virtual environment and install dependencies:
+Create the virtual environment and install dependencies from Windows PowerShell started with `-NoProfile`:
 
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Run Question 1 from the repository root:
 
-```bash
-. .venv/bin/activate
-python scripts/q1_main.py
+```powershell
+.\.venv\Scripts\python.exe scripts\q1_main.py
+.\.venv\Scripts\python.exe scripts\q1_certificate_verify.py --certificate output\question_1\certificate_q1.json --input original_source\附件\附件1.xlsx
 ```
 
 ## Git Workflow

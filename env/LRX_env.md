@@ -1,4 +1,4 @@
-# LRX Local Environment
+# LRX Windows Python Environment
 
 Date checked: 2026-09-11
 
@@ -6,62 +6,63 @@ Project path:
 
 `G:\a for HIT\project\Model_build_content_2026_0910`
 
-## Operating System
+## Formal Runtime
 
-- OS: Windows 10 / Windows NT 10.0.26200.0
-- Architecture: 64-bit
-- Shell used by Codex: PowerShell 7.6.4
+- Operating system kernel: Microsoft Windows NT 10.0.26200.0, AMD64.
+- Shell: PowerShell 7.6.5, started without loading a user profile for reproducible commands.
+- Python: CPython 3.11.9, 64-bit.
+- Virtual environment: `G:\a for HIT\project\Model_build_content_2026_0910\.venv`.
+- Interpreter used for verification: `.venv\Scripts\python.exe`.
+- pip: 24.0 inside `.venv`.
 
-## MWorks Installation
+The default `python` command resolves to `C:\Users\27073\miniconda3\python.exe`, which did not contain SciPy during this review. The `py -3.11` installation had scientific packages but lacked the required Excel packages. Formal project commands therefore invoke `.venv\Scripts\python.exe` explicitly and do not depend on either global environment.
 
-MWorks executables are not currently available from `PATH`.
+## Locked Direct Dependencies
 
-Installed products found from Windows uninstall registry:
+Installed successfully from the repository `requirements.txt`:
 
-| Product | Version | Path evidence |
-|---|---:|---|
-| MWORKS.Syslab 2024a(x64) | 0.11.1 | `C:\Program Files\MWORKS\Syslab 2024a\Bin\syslab.exe` |
-| MWORKS.Syslab 2026a(x64) | 26.1.2.6708 | registry entry exists; icon path points to Syslab 2024a |
-| MWORKS.Sysplorer 2024a(x64) | 6.0.2.2701 | registry entry exists; recorded icon path was not present on disk |
+| Package | Version |
+|---|---:|
+| numpy | 2.3.5 |
+| scipy | 1.16.3 |
+| pandas | 3.0.1 |
+| matplotlib | 3.10.8 |
+| openpyxl | 3.1.5 |
+| xlsxwriter | 3.2.9 |
 
-Observed local Syslab directories:
+## Complete Pip Freeze
 
-- `C:\Program Files\MWORKS\Syslab 2024a\Docs`
-- `C:\Program Files\MWORKS\Syslab 2024a\Examples`
-- `C:\Program Files\MWORKS\Syslab 2024a\Bin`
+```text
+contourpy==1.3.3
+cycler==0.12.1
+et_xmlfile==2.0.0
+fonttools==4.65.0
+kiwisolver==1.5.1
+matplotlib==3.10.8
+numpy==2.3.5
+openpyxl==3.1.5
+packaging==26.3
+pandas==3.0.1
+pillow==12.3.0
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+scipy==1.16.3
+six==1.17.0
+tzdata==2026.3
+xlsxwriter==3.2.9
+```
 
-The local Syslab examples mainly use `.jl` script files, so this project will use `.jl` for MWorks/Syslab scripts unless later testing proves another extension is required.
+## Verified Commands
 
-## Python and Conda
+Run from the repository root in Windows PowerShell:
 
-Python is not the primary project runtime. It may be used only as an auxiliary checker or file inspection tool.
+```powershell
+.\.venv\Scripts\python.exe scripts\q1_main.py
+.\.venv\Scripts\python.exe scripts\q1_certificate_verify.py --certificate output\question_1\certificate_q1.json --input original_source\附件\附件1.xlsx
+```
 
-- Default `python`: `C:\Users\27073\miniconda3\python.exe`
-- Python version: 3.11.14
-- Conda version: 25.9.1
-- `CONDA_PREFIX`: not set in this shell
-- `CONDA_DEFAULT_ENV`: not set in this shell
+The first clean install required a retry because the package download timed out. Re-running pip with a longer read timeout completed successfully without changing package versions.
 
-`conda info --envs` failed in the current Codex sandbox because Conda tried to probe CUDA virtual packages and hit `PermissionError: [WinError 5]`. This appears to be an environment-query issue, not a project dependency issue.
+## Scope
 
-## CUDA
-
-- `CUDA_PATH`: `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0`
-- `CUDA_PATH_V13_0`: `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0`
-
-CUDA is not expected to be needed for the deterministic LP model in question 1.
-
-## Virtual Environment Decision
-
-Do not create a Python virtual environment for this project at this stage.
-
-Reasoning:
-
-- The planned implementation language is MWorks/Syslab, not Python.
-- Python is only auxiliary, so creating a Python venv would not isolate the real runtime risk.
-- The main reproducibility risk is inconsistent MWorks/Syslab versions and syntax/API differences across teammates.
-- If Python scripts are later introduced for verification or plotting, prefer recording the exact interpreter and package versions first, then decide whether a dedicated environment is necessary.
-
-Recommended reproducibility rule:
-
-Each teammate should add their own `env/<name>_env.md` with MWorks version, executable path, shell, OS, and any auxiliary Python/Excel environment they used.
+This is the formal Windows environment record for Question 1. MWorks/Syslab, Linux, and Termux are not used by the current Python build. The `.venv/` directory is local and ignored by Git; only this environment record and `requirements.txt` should be shared.

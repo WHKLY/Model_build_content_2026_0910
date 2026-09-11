@@ -2,7 +2,7 @@
 
 Date checked: 2026-09-11
 
-Source: `/data/data/com.termux/files/home/storage/downloads/QQ/41016777d4c40050b84e92b2132cb7ea_3247872800853498438_m.md`
+Source: received teammate review notes.
 
 Reviewed commit: `49fba05854ea4af088e0ba5d3973df708ac6a8a8`.
 
@@ -22,6 +22,6 @@ Reviewed commit: `49fba05854ea4af088e0ba5d3973df708ac6a8a8`.
 
 The reviewer reports that the Python Question 1 pipeline ran successfully in this alternative environment when dependencies were already available. The previous `requirements.txt` attempted to pin `matplotlib==3.11.2`, which was not installable from the tested Windows package index. The project therefore pins `matplotlib==3.10.8` for the target clean-install requirement set until a newer version is clean-install tested on the intended contest machine.
 
-## Remaining Requirement
+## Current Status
 
-Before final contest submission, create a clean virtual environment on the intended target machine, install from `requirements.txt`, run `python scripts/q1_main.py`, and record a fresh `pip freeze` under `env/`.
+This CPython 3.12 result is retained as an alternative Windows compatibility review. The formal local build now uses the clean Windows CPython 3.11.9 `.venv` recorded in `env/LRX_env.md`; dependency installation, the Question 1 run, workbook read-back checks, and independent certificate verification all completed successfully there.

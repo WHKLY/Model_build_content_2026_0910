@@ -2,4 +2,4 @@
 
 Submitted schedule: Plan A.
 
-The official template purchase sheet labels rows from `0:10-0:20` through `0:00+1-0:10+1`. The model uses attachment endpoint semantics and physical intervals from `00:00-00:10` through `23:50-24:00`. To preserve the original template labels, `output/question_1/result1.xlsx` fills the 144 Plan A purchase values by row order. The same Plan A schedule is used for four-hour charge/discharge totals. The 0:00 and 24:00 SOC cells are filled explicitly as 6000 kWh.
+The supplied template is shifted by ten minutes: its purchase rows start at `0:10-0:20` and end on the following day. The source Attachment 1 labels are interpreted as interval endpoints, so the physical model covers `00:00-00:10` through `23:50-24:00`. The generated `output/question_1/result1.xlsx` corrects the row labels to those physical intervals and writes Plan A values accordingly. The immutable source template under `original_source/` is not modified. Four-hour charge/discharge totals and the explicit 0:00/24:00 SOC values use the same Plan A schedule.

@@ -4,15 +4,15 @@ This repository is for the 2026 mathematical modeling C problem on microgrid ext
 
 ## Collaboration Rules
 
-- Treat this as a group project. Every teammate may have a different local Python, package, Excel, and operating-system environment.
-- Record local environment details under `env/` before running or modifying executable code.
-- Do not assume another teammate has the same Python version, `PATH`, Excel reader backend, shell behavior, or package cache.
+- Treat this as a group project. Every teammate may have a different local Python, package, Excel, and Windows environment.
+- Record Windows environment details under `env/` before running or modifying executable code.
+- Do not assume another teammate has the same Python version, `PATH`, Excel reader backend, PowerShell behavior, or package cache.
 - Do not push to any remote repository unless the group explicitly agrees.
 
 ## Language and Runtime
 
 - Primary implementation language: Python.
-- Use the repository virtual environment `.venv/` for local runs.
+- Use the repository virtual environment `.venv/` for formal Windows runs and invoke `.venv\Scripts\python.exe` explicitly.
 - Pin runtime dependencies in `requirements.txt` and record the actual environment under `env/`.
 - Do not depend on MWorks/Syslab for the formal implementation. Earlier MWorks notes are retained only as project history.
 - Keep code portable and explicit. Avoid hidden notebook state, local absolute paths, or unrecorded package assumptions.
@@ -92,6 +92,8 @@ Keep scripts small and explainable:
 - `scripts/q1_main.py`: question 1 orchestration entry point.
 - `scripts/q1_model.py`: model parameter conversion, LP construction, and solve wrappers.
 - `scripts/q1_verify.py`: physical and numerical checks.
+- `scripts/q1_certificate.py`: exact rational certificate generation.
+- `scripts/q1_certificate_verify.py`: independent certificate verification without an optimizer.
 - `scripts/q1_export.py`: table and workbook output.
 - `scripts/q1_plot.py`: visualizations.
 

@@ -150,8 +150,9 @@ def build_lp(interval_data: IntervalData) -> LinearProgram:
             b_ub[row] = charge_upper
         row += 1
 
-        # x_t >= -min(Pmax*dt, load_t) / eta_d
-        discharge_lower = -min(ac_discharge_limit, interval_data.load_kwh[t]) / DISCHARGE_EFFICIENCY
+        # x_t >= -Pmax*dt/eta_d. This matches the model stated in the paper;
+        # any unused supply is represented by the nonnegative surplus slack.
+        discharge_lower = -ac_discharge_limit / DISCHARGE_EFFICIENCY
         a_ub[row, s] = -1.0
         if previous_s is None:
             b_ub[row] = -discharge_lower - SOC_INITIAL_KWH
@@ -218,11 +219,14 @@ def recover_solution(z: np.ndarray, interval_data: IntervalData, *, name: str) -
     )
 
 
-def solve_primary(interval_data: IntervalData) -> tuple[ScheduleSolution, LinearProgram]:
+def solve_primary(interval_data: IntervalData) -> tuple[ScheduleSolution, LinearProgram, np.ndarray]:
     lp = build_lp(interval_data)
     result = solve_lp(lp, name="primary-cost")
     solution = recover_solution(result.x, interval_data, name="primary-cost")
-    return solution.__class__(**{**solution.__dict__, "solver_status": result.status, "solver_message": result.message}), lp
+    solved = solution.__class__(
+        **{**solution.__dict__, "solver_status": result.status, "solver_message": result.message}
+    )
+    return solved, lp, np.asarray(result.ineqlin.marginals, dtype=float)
 
 
 def solve_at_same_cost(

@@ -2,40 +2,28 @@
 
 ## Environment
 
-Create and activate the project virtual environment, then install the pinned requirements.
-
-Linux / Termux / Git Bash:
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-Windows PowerShell:
+Use Windows PowerShell started with `-NoProfile`. Create the project virtual environment and install the pinned requirements:
 
 ```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 For contest verification, record the actual environment after installing dependencies:
 
-```bash
-python --version
-python -m pip --version
-python -m pip freeze
+```powershell
+.\.venv\Scripts\python.exe --version
+.\.venv\Scripts\python.exe -m pip --version
+.\.venv\Scripts\python.exe -m pip freeze
 ```
 
 ## Run
 
 From the project root:
 
-```bash
-python scripts/q1_main.py
+```powershell
+.\.venv\Scripts\python.exe scripts\q1_main.py
+.\.venv\Scripts\python.exe scripts\q1_certificate_verify.py --certificate output\question_1\certificate_q1.json --input original_source\附件\附件1.xlsx
 ```
 
 Expected outputs are written under `output/question_1/`.
@@ -47,6 +35,7 @@ Audit table outputs:
 - `q1_four_hour_summary.csv`
 - `q1_target_purchase.csv`
 - `q1_results.xlsx`
+- `certificate_q1.json`
 
 Official template-style output:
 

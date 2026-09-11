@@ -5,6 +5,8 @@ import argparse
 from pathlib import Path
 
 from project_paths import ATTACHMENT_1, ensure_output_dirs, q1_output_dir
+from q1_certificate import build_certificate, write_certificate
+from q1_certificate_verify import verify_certificate_file
 from q1_data import load_q1_source_data
 from q1_export import export_all
 from q1_model import no_storage_baseline, prepare_interval_data, solve_at_same_cost, solve_primary
@@ -18,13 +20,28 @@ def run_question_1(*, output_dir: Path | None = None, target_index: int = 140, m
     source = load_q1_source_data(ATTACHMENT_1)
     interval_data = prepare_interval_data(source)
 
-    primary_solution, lp = solve_primary(interval_data)
+    primary_solution, lp, inequality_marginals = solve_primary(interval_data)
     plan_a = solve_at_same_cost(interval_data, lp, primary_solution.cost, target_index=target_index, sense="min")
     plan_b = solve_at_same_cost(interval_data, lp, primary_solution.cost, target_index=target_index, sense="max")
     baseline = no_storage_baseline(interval_data)
     checks = verify_pair(interval_data, plan_a, plan_b, lp)
 
-    exported = export_all(outdir, source, interval_data, baseline, plan_a, plan_b, checks)
+    certificate = build_certificate(ATTACHMENT_1, plan_a, inequality_marginals)
+    certificate_path = write_certificate(outdir / "certificate_q1.json", certificate)
+    certificate_verification = verify_certificate_file(certificate_path, ATTACHMENT_1)
+
+    exported = export_all(
+        outdir,
+        source,
+        interval_data,
+        baseline,
+        plan_a,
+        plan_b,
+        checks,
+        certificate,
+        certificate_verification,
+    )
+    exported["certificate"] = certificate_path
     figures = plot_all(source, interval_data, baseline, plan_a, plan_b, outdir / "figures") if make_plots else {}
 
     print("Question 1 completed.")
@@ -37,6 +54,8 @@ def run_question_1(*, output_dir: Path | None = None, target_index: int = 140, m
     print(f"Summary CSV: {exported['summary_csv']}")
     print(f"Workbook path: {exported['workbook']}")
     print(f"Template result1 path: {exported['template_result1']}")
+    print(f"Exact certificate path: {certificate_path}")
+    print(f"Exact certificate gap: {certificate['gap']}")
 
     return {
         "baseline": baseline,

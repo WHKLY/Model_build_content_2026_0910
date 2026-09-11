@@ -104,6 +104,9 @@ def _max_bound_violation(lp: LinearProgram, z: np.ndarray) -> float:
 def verify_solution(interval_data: IntervalData, solution: ScheduleSolution, lp: LinearProgram | None = None) -> SolutionCheck:
     validate_interval_data(interval_data)
 
+    if solution.solver_status != 0:
+        raise AssertionError(f"{solution.name} solver did not report success: {solution.solver_message}")
+
     arrays = {
         "z": solution.z,
         "grid_kwh": solution.grid_kwh,
@@ -155,12 +158,8 @@ def verify_solution(interval_data: IntervalData, solution: ScheduleSolution, lp:
         raise AssertionError("charge power limit violated")
     if float(np.max(solution.discharge_kwh)) > power_limit_kwh + VERIFY_TOL:
         raise AssertionError("discharge power limit violated")
-    if float(np.max(solution.discharge_kwh - interval_data.load_kwh)) > VERIFY_TOL:
-        raise AssertionError("discharge exceeds same-interval load")
     if float(np.min(solution.curtail_kwh)) < -VERIFY_TOL:
-        raise AssertionError("negative PV curtailment detected")
-    if float(np.max(solution.curtail_kwh - interval_data.pv_kwh)) > VERIFY_TOL:
-        raise AssertionError("PV curtailment exceeds available PV")
+        raise AssertionError("negative supply surplus detected")
 
     residual = float(np.max(np.abs(balance_residual(interval_data, solution))))
     if residual > 1.0e-5:
