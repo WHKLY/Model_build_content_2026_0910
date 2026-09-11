@@ -19,7 +19,7 @@ Question 1 already has a working Python implementation that reproduces the main 
 - Plan A charge/discharge totals: 20740.67 kWh and 16799.94 kWh;
 - initial and terminal SOC: 6000.00 kWh.
 
-The current Python result is a complete Question 1 computational submission package: it includes the corrected template copy, audit workbook, exact rational certificate, independent verifier, CSV tables, and PNG/SVG figures. Future changes must preserve this evidence chain.
+The current Python result is a complete Question 1 computational submission package: it includes the strictly template-preserving result workbook, audit workbook, exact rational certificate, independent verifier, CSV tables, and PNG/SVG figures. Future changes must preserve this evidence chain.
 
 ## 2. Runtime And Dependency Policy
 
@@ -78,11 +78,12 @@ The current code now creates audit outputs and `output/question_1/result1.xlsx`.
 Template export rules:
 
 1. Use Plan A as the submitted schedule.
-2. Preserve the original template structure unless the team deliberately creates a clearly named corrected-copy template.
+2. Preserve the original template structure and formatting exactly. Only populate the designated blank result cells.
 3. Explicitly fill 0:00 SOC as 6000 kWh and 24:00 SOC as 6000 kWh.
 4. Do not use the first schedule-row SOC of 6750 kWh as the 0:00 SOC.
-5. Correct the generated template-copy labels to physical intervals `00:00-00:10` through `23:50-24:00`; never modify the immutable source template.
-6. After writing the workbook, read it back and verify that template values match the selected Plan A schedule and four-hour totals.
+5. Preserve every time label from the official template verbatim. The physical intervals `00:00-00:10` through `23:50-24:00` belong in audit outputs and the mapping note, not in the official workbook's label cells.
+6. Preserve workbook package resources, including shared strings and printer settings; do not add formatting, worksheets, freeze panes, or width changes.
+7. After writing the workbook, read it back and verify that template values match the selected Plan A schedule and four-hour totals, and that all unapproved workbook content matches the template.
 
 ## 5. Verification Policy
 

@@ -1,21 +1,43 @@
 """Question 1 table, workbook, and official-template exports."""
 from __future__ import annotations
 
+from hashlib import sha256
+from io import BytesIO
+import os
 from pathlib import Path
+from pathlib import PurePosixPath
+import tempfile
 from typing import Any
+from xml.etree import ElementTree as ET
+from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import Alignment, Font, PatternFill
 
-from project_paths import TEMPLATE_RESULT_1
+from project_paths import PROJECT_ROOT, TEMPLATE_RESULT_1
 from q1_data import INTERVAL_COUNT, Q1SourceData
 from q1_model import BaselineSolution, IntervalData, SOC_INITIAL_KWH, SOC_TERMINAL_KWH, ScheduleSolution
 from q1_verify import SolutionCheck
 
 READBACK_TOL = 1.0e-6
 DISPLAY_ZERO_TOL = 1.0e-8
+RAW_TEMPLATE_RESULT_1 = PROJECT_ROOT / "raw" / "附件" / "附件5" / "result1.xlsx"
+
+SPREADSHEET_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+DOCUMENT_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+NS = {"main": SPREADSHEET_NS, "rel": DOCUMENT_REL_NS, "pkg": PACKAGE_REL_NS}
+
+TEMPLATE_EDITABLE_CELLS = {
+    "计划购电量": {f"B{row}" for row in range(2, INTERVAL_COUNT + 2)},
+    "充放电量": {
+        *(f"B{row}" for row in range(2, 8)),
+        *(f"C{row}" for row in range(2, 8)),
+        "E2",
+        "E3",
+    },
+}
 
 
 def _display_float(value: float) -> float:
@@ -187,67 +209,230 @@ def verify_audit_workbook(
             raise AssertionError(f"workbook schedule column {column} mismatch: {diff}")
 
 
-def write_template_result1(path: Path, source: Q1SourceData, plan_a: ScheduleSolution) -> Path:
-    if not TEMPLATE_RESULT_1.exists():
-        raise FileNotFoundError(f"template result1.xlsx not found: {TEMPLATE_RESULT_1}")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    workbook = load_workbook(TEMPLATE_RESULT_1)
-    purchase_ws = workbook["计划购电量"]
-    storage_ws = workbook["充放电量"]
+def _file_sha256(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
-    # The supplied template is shifted by ten minutes. Keep the source template
-    # immutable and correct the labels only in the generated submission copy.
-    for i, (interval, value) in enumerate(zip(source.interval, plan_a.grid_kwh), start=2):
-        purchase_ws.cell(row=i, column=1).value = interval
-        purchase_ws.cell(row=i, column=2).value = _display_float(value)
-        purchase_ws.cell(row=i, column=2).number_format = "0.000000"
 
+def _validated_template_path() -> Path:
+    for candidate in (RAW_TEMPLATE_RESULT_1, TEMPLATE_RESULT_1):
+        if not candidate.exists():
+            raise FileNotFoundError(f"template result1.xlsx not found: {candidate}")
+    raw_hash = _file_sha256(RAW_TEMPLATE_RESULT_1)
+    canonical_hash = _file_sha256(TEMPLATE_RESULT_1)
+    if raw_hash != canonical_hash:
+        raise AssertionError("raw and canonical result1.xlsx templates are not byte-identical")
+    return RAW_TEMPLATE_RESULT_1
+
+
+def _register_xml_namespaces(xml_bytes: bytes) -> None:
+    for _, namespace in ET.iterparse(BytesIO(xml_bytes), events=("start-ns",)):
+        prefix, uri = namespace
+        ET.register_namespace(prefix or "", uri)
+
+
+def _worksheet_parts(archive: ZipFile) -> dict[str, str]:
+    workbook_root = ET.fromstring(archive.read("xl/workbook.xml"))
+    relationships_root = ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
+    relationships = {
+        node.attrib["Id"]: node.attrib["Target"]
+        for node in relationships_root.findall(f"{{{PACKAGE_REL_NS}}}Relationship")
+    }
+    parts: dict[str, str] = {}
+    for sheet in workbook_root.findall("main:sheets/main:sheet", NS):
+        relationship_id = sheet.attrib[f"{{{DOCUMENT_REL_NS}}}id"]
+        target = relationships[relationship_id]
+        if target.startswith("/"):
+            part = target.lstrip("/")
+        else:
+            part = str(PurePosixPath("xl") / PurePosixPath(target))
+        parts[sheet.attrib["name"]] = part
+    return parts
+
+
+def _column_number(cell_reference: str) -> int:
+    value = 0
+    for character in cell_reference:
+        if not character.isalpha():
+            break
+        value = value * 26 + ord(character.upper()) - ord("A") + 1
+    return value
+
+
+def _set_numeric_cell(worksheet_root: ET.Element, cell_reference: str, value: float) -> None:
+    row_number = int("".join(character for character in cell_reference if character.isdigit()))
+    sheet_data = worksheet_root.find("main:sheetData", NS)
+    if sheet_data is None:
+        raise AssertionError("template worksheet has no sheetData element")
+    row = sheet_data.find(f"main:row[@r='{row_number}']", NS)
+    if row is None:
+        raise AssertionError(f"template worksheet has no row {row_number}")
+
+    cell = row.find(f"main:c[@r='{cell_reference}']", NS)
+    if cell is None:
+        cell = ET.Element(f"{{{SPREADSHEET_NS}}}c", {"r": cell_reference})
+        target_column = _column_number(cell_reference)
+        insert_at = len(row)
+        for index, existing in enumerate(row.findall("main:c", NS)):
+            if _column_number(existing.attrib["r"]) > target_column:
+                insert_at = index
+                break
+        row.insert(insert_at, cell)
+
+    cell.attrib.pop("t", None)
+    for child in list(cell):
+        if child.tag in {
+            f"{{{SPREADSHEET_NS}}}f",
+            f"{{{SPREADSHEET_NS}}}is",
+            f"{{{SPREADSHEET_NS}}}v",
+        }:
+            cell.remove(child)
+    value_node = ET.SubElement(cell, f"{{{SPREADSHEET_NS}}}v")
+    value_node.text = repr(_display_float(value))
+
+
+def _patch_worksheet(xml_bytes: bytes, values: dict[str, float]) -> bytes:
+    _register_xml_namespaces(xml_bytes)
+    root = ET.fromstring(xml_bytes)
+    for cell_reference, value in values.items():
+        _set_numeric_cell(root, cell_reference, value)
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
+def _template_values(plan_a: ScheduleSolution) -> dict[str, dict[str, float]]:
+    purchase_values = {
+        f"B{row}": float(value)
+        for row, value in enumerate(plan_a.grid_kwh, start=2)
+    }
     four_hour = four_hour_table(plan_a)
+    storage_values: dict[str, float] = {}
     for row_index, row in enumerate(four_hour.itertuples(index=False), start=2):
-        storage_ws.cell(row=row_index, column=2).value = _display_float(row.charge_A_kwh)
-        storage_ws.cell(row=row_index, column=3).value = _display_float(row.discharge_A_kwh)
+        storage_values[f"B{row_index}"] = float(row.charge_A_kwh)
+        storage_values[f"C{row_index}"] = float(row.discharge_A_kwh)
+    storage_values["E2"] = float(SOC_INITIAL_KWH)
+    storage_values["E3"] = float(SOC_TERMINAL_KWH)
+    return {"计划购电量": purchase_values, "充放电量": storage_values}
 
-    storage_ws.cell(row=2, column=5).value = float(SOC_INITIAL_KWH)
-    storage_ws.cell(row=3, column=5).value = float(SOC_TERMINAL_KWH)
-    for worksheet in (purchase_ws, storage_ws):
-        for cell in worksheet[1]:
-            cell.font = Font(name="Microsoft YaHei", bold=True, color="FFFFFF")
-            cell.fill = PatternFill("solid", fgColor="234E70")
-            cell.alignment = Alignment(horizontal="center", vertical="center")
-        worksheet.freeze_panes = "A2"
-    purchase_ws.column_dimensions["A"].width = 20
-    purchase_ws.column_dimensions["B"].width = 18
-    for column in ("A", "B", "C", "D", "E"):
-        storage_ws.column_dimensions[column].width = 18
-    for row in storage_ws.iter_rows(min_row=2, max_row=storage_ws.max_row, min_col=2, max_col=5):
-        for cell in row:
-            if isinstance(cell.value, (int, float)):
-                cell.number_format = "0.000000"
-    workbook.save(path)
+
+def write_template_result1(path: Path, source: Q1SourceData, plan_a: ScheduleSolution) -> Path:
+    del source  # Row order is fixed by the official template; labels remain untouched.
+    template_path = _validated_template_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    values_by_sheet = _template_values(plan_a)
+
+    temp_file = tempfile.NamedTemporaryFile(
+        prefix=f"{path.stem}-",
+        suffix=".xlsx",
+        dir=path.parent,
+        delete=False,
+    )
+    temp_path = Path(temp_file.name)
+    temp_file.close()
+    try:
+        with ZipFile(template_path, "r") as source_archive, ZipFile(temp_path, "w") as output_archive:
+            worksheet_parts = _worksheet_parts(source_archive)
+            replacements = {
+                worksheet_parts[sheet_name]: values
+                for sheet_name, values in values_by_sheet.items()
+            }
+            output_archive.comment = source_archive.comment
+            for item in source_archive.infolist():
+                payload = source_archive.read(item.filename)
+                if item.filename in replacements:
+                    payload = _patch_worksheet(payload, replacements[item.filename])
+                output_archive.writestr(item, payload)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
     return path
 
 
+def _xml_signature(element: ET.Element) -> tuple[Any, ...]:
+    text = element.text.strip() if element.text and element.text.strip() else None
+    return (
+        element.tag,
+        tuple(sorted(element.attrib.items())),
+        text,
+        tuple(_xml_signature(child) for child in element),
+    )
+
+
+def _worksheet_signature_without_editable_cells(xml_bytes: bytes, editable_cells: set[str]) -> tuple[Any, ...]:
+    root = ET.fromstring(xml_bytes)
+    for row in root.findall("main:sheetData/main:row", NS):
+        for cell in list(row.findall("main:c", NS)):
+            if cell.attrib.get("r") in editable_cells:
+                row.remove(cell)
+    return _xml_signature(root)
+
+
+def _verify_template_package(path: Path, template_path: Path) -> None:
+    with ZipFile(template_path, "r") as template_archive, ZipFile(path, "r") as output_archive:
+        template_parts = _worksheet_parts(template_archive)
+        output_parts = _worksheet_parts(output_archive)
+        if template_parts != output_parts:
+            raise AssertionError("result1.xlsx worksheet package mapping differs from the template")
+        if template_archive.namelist() != output_archive.namelist():
+            raise AssertionError("result1.xlsx package members differ from the template")
+
+        editable_parts = set(template_parts.values())
+        for item in template_archive.infolist():
+            if item.filename not in editable_parts:
+                if template_archive.read(item.filename) != output_archive.read(item.filename):
+                    raise AssertionError(f"unapproved template package part changed: {item.filename}")
+
+        for sheet_name, editable_cells in TEMPLATE_EDITABLE_CELLS.items():
+            part = template_parts[sheet_name]
+            template_signature = _worksheet_signature_without_editable_cells(
+                template_archive.read(part), editable_cells
+            )
+            output_signature = _worksheet_signature_without_editable_cells(
+                output_archive.read(part), editable_cells
+            )
+            if template_signature != output_signature:
+                raise AssertionError(f"unapproved worksheet structure changed: {sheet_name}")
+
+
 def verify_template_result1(path: Path, source: Q1SourceData, plan_a: ScheduleSolution) -> None:
+    del source
+    template_path = _validated_template_path()
+    _verify_template_package(path, template_path)
+    template_workbook = load_workbook(template_path, data_only=False)
     workbook = load_workbook(path, data_only=True)
+    if workbook.sheetnames != template_workbook.sheetnames:
+        raise AssertionError("result1.xlsx worksheet names or order differ from the template")
     purchase_ws = workbook["计划购电量"]
     storage_ws = workbook["充放电量"]
+    template_purchase_ws = template_workbook["计划购电量"]
+    template_storage_ws = template_workbook["充放电量"]
     if purchase_ws.max_row < INTERVAL_COUNT + 1:
         raise AssertionError("template purchase sheet does not contain 144 data rows")
-    for i, (expected_interval, expected) in enumerate(zip(source.interval, plan_a.grid_kwh), start=2):
-        if purchase_ws.cell(i, 1).value != expected_interval:
-            raise AssertionError(f"template purchase row {i} interval label mismatch")
+    for i, expected in enumerate(plan_a.grid_kwh, start=2):
+        if purchase_ws.cell(i, 1).value != template_purchase_ws.cell(i, 1).value:
+            raise AssertionError(f"template purchase row {i} label changed")
+        if purchase_ws.cell(i, 2).style_id != template_purchase_ws.cell(i, 2).style_id:
+            raise AssertionError(f"template purchase row {i} style changed")
         _assert_close(f"template purchase row {i}", purchase_ws.cell(i, 2).value, expected, tol=1.0e-8)
 
     four_hour = four_hour_table(plan_a)
     for offset, row in enumerate(four_hour.itertuples(index=False), start=2):
+        if storage_ws.cell(offset, 1).value != template_storage_ws.cell(offset, 1).value:
+            raise AssertionError(f"template storage row {offset} label changed")
         _assert_close(f"template charge row {offset}", storage_ws.cell(offset, 2).value, row.charge_A_kwh, tol=1.0e-8)
         _assert_close(f"template discharge row {offset}", storage_ws.cell(offset, 3).value, row.discharge_A_kwh, tol=1.0e-8)
+    for coordinate in ("D2", "D3"):
+        if storage_ws[coordinate].value != template_storage_ws[coordinate].value:
+            raise AssertionError(f"template storage cell {coordinate} changed")
     _assert_close("template 0:00 SOC", storage_ws.cell(2, 5).value, SOC_INITIAL_KWH)
     _assert_close("template 24:00 SOC", storage_ws.cell(3, 5).value, SOC_TERMINAL_KWH)
 
 
 def write_template_mapping_note(path: Path) -> Path:
-    text = """# result1.xlsx Mapping Note\n\nSubmitted schedule: Plan A.\n\nThe supplied template is shifted by ten minutes: its purchase rows start at `0:10-0:20` and end on the following day. The source Attachment 1 labels are interpreted as interval endpoints, so the physical model covers `00:00-00:10` through `23:50-24:00`. The generated `output/question_1/result1.xlsx` corrects the row labels to those physical intervals and writes Plan A values accordingly. The immutable source template under `original_source/` is not modified. Four-hour charge/discharge totals and the explicit 0:00/24:00 SOC values use the same Plan A schedule.\n"""
+    text = """# result1.xlsx Mapping Note\n\nSubmitted schedule: Plan A.\n\nThe generated `output/question_1/result1.xlsx` strictly preserves the official template at `raw/附件/附件5/result1.xlsx`, including its original purchase-row labels, formatting, worksheets, shared strings, and printer settings. Only the designated blank numeric result cells are populated.\n\nThe model interprets Attachment 1 labels as interval endpoints and therefore covers physical intervals `00:00-00:10` through `23:50-24:00`. Those physical labels are retained in the audit CSV and `q1_results.xlsx`; they are not written over the official template. Purchase values are written in the template's existing row order. Four-hour charge/discharge totals and the explicit 0:00/24:00 SOC values use the same Plan A schedule.\n"""
     path.write_text(text, encoding="utf-8")
     return path
 

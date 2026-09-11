@@ -37,10 +37,12 @@ Audit table outputs:
 - `q1_results.xlsx`
 - `certificate_q1.json`
 
-Official template-style output:
+Official template-preserving output:
 
 - `result1.xlsx`
 - `result1_mapping_note.md`
+
+`result1.xlsx` retains the official template's labels, formatting, sheet structure, shared strings, and printer settings. Model-specific physical interval labels are available in the audit CSV/workbook rather than being written over the official template.
 
 Expected figures:
 

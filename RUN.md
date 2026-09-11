@@ -28,5 +28,5 @@ Detailed output notes are in:
 - The target clean-install dependency set is in `requirements.txt` and is verified against the Windows CPython 3.11 project environment.
 - Source data for question 1 is read from `original_source/附件/附件1.xlsx`.
 - Results are written to `output/question_1/` when the entry script is run.
-- The official template-style output is `output/question_1/result1.xlsx`; audit outputs remain in `q1_*.csv` and `q1_results.xlsx`.
+- The official output is `output/question_1/result1.xlsx`. It preserves the supplied template exactly except for designated numeric result cells; audit outputs remain in `q1_*.csv` and `q1_results.xlsx`.
 - The exact optimality certificate is `output/question_1/certificate_q1.json` and must pass the independent verifier command above.
