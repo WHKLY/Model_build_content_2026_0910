@@ -99,6 +99,29 @@ Keep scripts small and explainable:
 
 Future scripts should follow the same pattern: path/config, data, model, run, verify, output, plot.
 
+## Question 2 Modeling Constraints
+
+The reviewed Question 2 implementation uses a causal two-stage stochastic model
+with conflict-driven incremental MILP:
+
+- the day-ahead purchase is frozen before the modeled day;
+- forecasts and residual scenarios use only completed earlier days;
+- load/PV residuals are sampled as paired complete-day paths;
+- emergency electricity costs five times the interval price and cannot charge the battery;
+- the LP relaxation is accepted only when it has no charge/emergency conflict;
+- otherwise binary mode constraints are activated for all intervals of each conflicting scenario;
+- every accepted schedule must be feasible for the full MILP logic and carries the solver's reported objective gap;
+- January is a continuous causal warm-up from the stated 6000 kWh initial SOC;
+- official output covers February 1 through December 31;
+- actual reported cost excludes the terminal-SOC planning penalty;
+- `result2.xlsx` keeps the official three-sheet/column format, while diagnostics stay in CSV files.
+
+Before changing Question 2, read:
+
+- `note/2026-09-11-q2-formal-incremental-milp.md`
+- `scripts/RUN_Q2.md`
+- the relevant received files under `recieve/problem_2/`
+
 ## Git Policy
 
 - A local Git repository may be used for versioning.

@@ -34,6 +34,19 @@ Detailed output notes are in:
 
 `scripts/RUN_Q1.md`
 
+## Question 2
+
+Run the complete causal stochastic replay from Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\q2_main.py
+```
+
+The run is CPU-intensive, saves a checkpoint after every completed day, and
+normally takes about 35 minutes on the recorded LRX machine. It produces the
+strict official `result2.xlsx` plus independent CSV audit and comparison files.
+Detailed commands and numerical interpretation are in `scripts/RUN_Q2.md`.
+
 ## Important Notes
 
 - The project uses Python instead of MWorks/Syslab.
@@ -43,3 +56,5 @@ Detailed output notes are in:
 - Results are written to `output/question_1/` when the entry script is run.
 - The official output is `output/question_1/result1.xlsx`. It preserves the supplied template exactly except for designated numeric result cells; audit outputs remain in `q1_*.csv` and `q1_results.xlsx`.
 - The exact optimality certificate is `output/question_1/certificate_q1.json` and must pass the independent verifier command above.
+- Question 2 reads Attachments 1 and 2 from `original_source/附件/` and writes to `output/question_2/`.
+- `output/question_2/result2.xlsx` retains only the official three worksheets; solver gaps and residuals are kept in CSV audit files.

@@ -166,7 +166,23 @@ Execute future work in this order:
 6. Update paper text so claims match implemented evidence.
 7. Commit code, environment records, outputs, and paper-related docs in focused commits.
 
-Do not start Questions 2-4 implementation until Question 1's submission package is internally consistent.
+Question 1's submission package is internally consistent. Question 2 has now
+advanced to a reviewed Python implementation using causal residual scenarios and
+conflict-driven incremental MILP. Questions 3-4 remain blocked until their own
+model, exporter, and independent verification are complete.
+
+Question 2 source-of-truth files are:
+
+- `note/2026-09-11-q2-formal-incremental-milp.md`
+- `scripts/RUN_Q2.md`
+- `scripts/q2_data.py`, `q2_model.py`, `q2_control.py`, `q2_verify.py`,
+  `q2_export.py`, and `q2_main.py`
+
+The verified Question 2 baseline uses 20 paired whole-day residual scenarios,
+scenario-level conflict activation, a `1e-3` MILP gap, and a 30-second daily time
+limit. Formal claims must distinguish forecast residuals, physical constraint
+residuals, and the MILP objective gap. `result2.xlsx` must retain only the three
+official template worksheets; all diagnostics belong in CSV files.
 
 ## 9. Contest One-Touch Package
 

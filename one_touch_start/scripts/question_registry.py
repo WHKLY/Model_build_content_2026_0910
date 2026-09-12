@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 from q1_runner import run_question_1
+from q2_runner import run_question_2
 
 
 QuestionRunner = Callable[[], None]
@@ -11,6 +12,7 @@ QuestionRunner = Callable[[], None]
 # Add a question only after its model, exporter, and verification are complete.
 QUESTION_RUNNERS: dict[int, QuestionRunner] = {
     1: run_question_1,
+    2: run_question_2,
 }
 
 

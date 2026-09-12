@@ -149,6 +149,16 @@ Run Question 1 from the repository root:
 .\.venv\Scripts\python.exe scripts\q1_certificate_verify.py --certificate output\question_1\certificate_q1.json --input original_source\附件\附件1.xlsx
 ```
 
+Run Question 2 from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\q2_main.py
+```
+
+Question 2 is CPU-intensive, uses daily checkpoints, and normally takes about
+35 minutes on the recorded Windows machine. Read `scripts/RUN_Q2.md` before
+changing its forecast, scenario, MILP, replay, or template-export behavior.
+
 ## Git Workflow
 
 Before changing files, check:

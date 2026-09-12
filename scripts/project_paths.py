@@ -25,6 +25,10 @@ def q1_output_dir() -> Path:
     return OUTPUT_ROOT / "question_1"
 
 
+def q2_output_dir() -> Path:
+    return OUTPUT_ROOT / "question_2"
+
+
 def ensure_output_dirs() -> None:
     q1_output_dir().mkdir(parents=True, exist_ok=True)
     (q1_output_dir() / "figures").mkdir(parents=True, exist_ok=True)
